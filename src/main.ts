@@ -2,15 +2,16 @@ import './scss/styles.scss';
 
 import { ProductCatalog } from './components/Models/ProductCatalog';
 import { Cart } from './components/Models/Cart';
-import { Buyer } from './components/Models/Buyer';
-import { Api } from './components/base/Api';
-import { IProduct, IBuyer } from './types';
+import { User } from './components/Models/User';
+import { ServerService } from './components/base/ServerService';
+import { IProduct, IUser } from './types';
 
 // Создание экземпляров классов
 const catalog = new ProductCatalog();
 const cart = new Cart();
-const buyer = new Buyer();
-const api = new Api('http://localhost:5173/'); 
+const user = new User();
+const baseUrl = import.meta.env.VITE_API_URL || '';
+const server = new ServerService(baseUrl);
 
 // Тестовые данные
 const testProduct: IProduct = {
@@ -22,7 +23,7 @@ const testProduct: IProduct = {
 	price: 1000
 };
 
-const testBuyer: IBuyer = {
+const testUser: IUser = {
 	payment: 'card',
 	email: 'test@example.com',
 	phone: '+79999999999',
@@ -46,14 +47,14 @@ console.log('Корзина после удаления:', cart.getItems());
 cart.clear();
 console.log('Корзина после очистки:', cart.getItems());
 
-buyer.setData(testBuyer);
-console.log('Данные покупателя:', buyer.getData());
-console.log('Валидность данных покупателя:', buyer.validate());
-buyer.clear();
-console.log('Данные покупателя после очистки:', buyer.getData());
+user.setData(testUser);
+console.log('Данные пользователя:', user.getData());
+console.log('Валидность данных пользователя:', user.validate());
+user.clear();
+console.log('Данные пользователя после очистки:', user.getData());
 
 // Запрос к серверу за массивом товаров
-api.get<IProduct[]>('/products')
+server.getProducts()
 	.then(products => {
 		catalog.setProducts(products);
 		console.log('Товары с сервера:', catalog.getProducts());

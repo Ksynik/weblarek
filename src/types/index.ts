@@ -11,8 +11,8 @@ export interface IProduct {
 // Тип для способа оплаты
 export type TPayment = 'card' | 'cash';
 
-// Интерфейс покупателя
-export interface IBuyer {
+// Интерфейс пользователя
+export interface IUser {
     payment: TPayment;
     email: string;
     phone: string;
@@ -20,6 +20,6 @@ export interface IBuyer {
 }
     // Тип для объекта заказа, отправляемого на сервер
     export type TOrder = {
-        buyer: IBuyer;
+        user: IUser;
         items: IProduct[];
     };
