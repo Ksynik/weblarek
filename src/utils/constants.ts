@@ -10,3 +10,16 @@ export const settings = {
 
 };
 
+// Карта соответствия категории и модификатора класса card__category
+export const categoryMap: { [key: string]: string } = {
+    'софт-скил': 'soft',
+    'другое': 'other',
+    'дополнительное': 'additional',
+    'кнопка': 'button',
+    'хард-скил': 'hard'
+};
+
+export function mapCategoryToModifier(category: string): string {
+    return categoryMap[category] || 'other';
+}
+
