@@ -34,20 +34,11 @@ export class Basket extends Component<IBasket> {
     }
 
     set total(value: number) {
-        this.setText(this.priceElement, `${value} синапсов`);
-    }
-
-    protected setText(element: HTMLElement, text: string): void {
-        if (element) {
-            element.textContent = text;
-        }
-    }
-
-    set onOrder(callback: () => void) {
-        this.events.on('basket:order', callback);
+        this.priceElement.textContent = `${value} синапсов`;
     }
 
     protected setDisabled(button: HTMLButtonElement, disabled: boolean): void {
         button.disabled = disabled;
     }
+
 }

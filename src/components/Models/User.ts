@@ -1,9 +1,8 @@
-
 import { IUser, TPayment } from '../../types';
 import { EventEmitter } from '../base/Events';
 
 export class User {
-    payment: TPayment = 'card';
+    payment: TPayment = '';
     email: string = '';
     phone: string = '';
     address: string = '';
@@ -27,23 +26,43 @@ export class User {
     }
 
     clear(): void {
-        this.payment = 'card';
+        this.payment = '';
         this.email = '';
         this.phone = '';
         this.address = '';
         this.events.emit('user:changed', this.getData());
     }
 
-    validate(): boolean {
-        return (
-            !!this.email &&
-            !!this.phone &&
-            !!this.address &&
-            !!this.payment
-        );
+    getOrderErrors(): { payment?: string; address?: string } {
+        const errors: { payment?: string; address?: string } = {};
+        if (!this.payment) {
+            errors.payment = 'Не выбран способ оплаты';
+        }
+        if (!this.address) {
+            errors.address = 'Укажите адрес';
+        }
+        return errors;
     }
 
-    on<T extends object>(event: string, callback: (event: T) => void): void {
-        this.events.on<T>(event, callback);
+    getContactsErrors(): { email?: string; phone?: string } {
+        const errors: { email?: string; phone?: string } = {};
+        if (!this.email) {
+            errors.email = 'Укажите e-mail';
+        }
+        if (!this.phone) {
+            errors.phone = 'Укажите телефон';
+        }
+        return errors;
+    }
+
+    getFieldErrors(): { payment?: string; email?: string; phone?: string; address?: string } {
+        return {
+            ...this.getOrderErrors(),
+            ...this.getContactsErrors()
+        };
+    }
+
+    validate(): boolean {
+        return !!(this.payment && this.email && this.phone && this.address);
     }
 }

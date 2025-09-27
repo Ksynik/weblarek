@@ -40,7 +40,7 @@ export class ModalView extends Component<IModal>  {
 		this.events.emit('modal:close');
 	}
 
-	render(data: IModal): HTMLElement {
+	render(): HTMLElement {
 		this.open();
 		return this.container;
 	}

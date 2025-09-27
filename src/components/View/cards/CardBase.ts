@@ -4,11 +4,11 @@ import {ensureElement} from '../../../utils/utils';
 
 interface CardBaseData {
     cardTitle: string;
-    Price: number | null;
+    price: number | null;
     id: string;
 }
 
-export class CardBase extends Component<CardBaseData> {
+export abstract class CardBase extends Component<CardBaseData> {
     protected titleElement: HTMLElement;
     protected priceElement: HTMLElement;
     protected cardId: string = "";

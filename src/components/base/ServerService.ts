@@ -1,15 +1,15 @@
 import { Api } from '../base/Api';
 import { IProduct, TOrder } from '../../types';
+import { CDN_URL } from '../../utils/constants';
 
 
 export class ServerService {
     private api: Api;
     readonly cdn: string;
 
-    constructor(baseUrl: string, cdn: string = baseUrl) {
-        const origin = (baseUrl || '').replace(/\/+$/, '');
-        this.api = new Api(origin + '/api/weblarek');
-        this.cdn = (cdn || origin) + '/content/weblarek';
+    constructor(api: Api) {
+        this.api = api;
+        this.cdn = CDN_URL;
     }
 
     getProductList(): Promise<IProduct[]> {
@@ -28,6 +28,6 @@ export class ServerService {
         if (!path) return '';
         if (/^https?:\/\//i.test(path)) return path;
         const needsSlash = path.startsWith('/') ? '' : '/';
-        return this.cdn + needsSlash + path;
+        return CDN_URL + needsSlash + path;
     }
 }

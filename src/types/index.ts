@@ -8,8 +8,8 @@ export interface IProduct {
     price: number | null;
 }
 
-// Тип для способа оплаты
-export type TPayment = 'online' | 'offline' | 'card' | 'cash';
+// Тип для способа оплаты (разрешаем пустую строку для невыбранного)
+export type TPayment = '' | 'online' | 'offline' | 'card' | 'cash';
 
 // Интерфейс пользователя
 export interface IUser {
@@ -18,10 +18,9 @@ export interface IUser {
     phone: string;
     address: string;
 }
-    // Тип для объекта заказа, отправляемого на сервер
 export type TOrder = {
     items: string[]; 
-    price: number | null;
+    total: number | null;
     payment: TPayment;
     address: string;
     email: string;

@@ -10,6 +10,7 @@ export class PreviewCard extends Component<IPreviewCard> {
     protected _price: HTMLElement;
     protected _button: HTMLButtonElement;
     private _buttonClickHandlers: (() => void)[] = [];
+    private _deleteHandlers: (() => void)[] = [];
 
     constructor(container: HTMLElement) {
         super(container);
@@ -26,44 +27,29 @@ export class PreviewCard extends Component<IPreviewCard> {
         });
     }
 
-    set image(src: string) {
-        this.setImage(this._image, src);
+    render(data: IPreviewCard): HTMLElement {
+        this._image.src = data.image;
+        if (data.alt) this._image.alt = data.alt;
+        this._category.textContent = data.category;
+        // Удаляем старые модификаторы категории
+        const classList = this._category.classList;
+        const classesToRemove = Array.from(classList).filter(cls => cls.startsWith('card__category_'));
+        classesToRemove.forEach(cls => classList.remove(cls));
+        if (data.categoryClass) {
+            classList.add(`card__category_${data.categoryClass}`);
+        }
+        this._title.textContent = data.title;
+        this._description.textContent = data.description;
+        this._price.textContent = data.price !== null ? `${data.price} синапсов` : '';
+        this._button.textContent = data.buttonText;
+        this._button.disabled = !!data.buttonDisabled;
+        return this.container;
     }
 
-    set alt(value: string) {
-        this._image.alt = value;
-    }
-
-    set category(value: string) {
-        this._category.textContent = value;
-    }
-
-    set categoryClass(value: string) {
-        this._category.className = 'card__category';
-        this._category.classList.add(`card__category_${value}`);
-    }
-
-    set title(value: string) {
-        this._title.textContent = value;
-    }
-
-    set description(value: string) {
-        this._description.textContent = value;
-    }
-
-    set price(value: number | null) {
-        this._price.textContent = value === null ? 'Бесценно' : `${value} синапсов`;
-    }
-
-    set buttonText(value: string) {
-        this._button.textContent = value;
-    }
-
-    set buttonDisabled(value: boolean) {
-        this._button.disabled = value;
-    }
-
-    set onClick(callback: () => void) {
+    addClickHandler(callback: () => void) {
         this._buttonClickHandlers.push(callback);
+    }
+    addDeleteHandler(callback: () => void) {
+        this._deleteHandlers.push(callback);
     }
 }

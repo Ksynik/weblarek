@@ -1,6 +1,7 @@
 import { Form } from '../Form';
 import { ensureElement } from '../../../utils/utils';
 import { TPayment } from '../../../types';
+import { EventEmitter } from '../../base/Events';
 
 interface IOrderForm {
     payment: TPayment;
@@ -10,49 +11,29 @@ interface IOrderForm {
 export class OrderForm extends Form<IOrderForm> {
     protected _paymentButtons: NodeListOf<HTMLButtonElement>;
     protected _addressInput: HTMLInputElement;
-    private _paymentChangeHandlers: ((method: TPayment) => void)[] = [];
     private _errorsElement: HTMLElement;
+    public events: EventEmitter;
 
     constructor(container: HTMLFormElement) {
         super(container);
+        this.events = new EventEmitter();
 
         this._paymentButtons = this.container.querySelectorAll('button[name]');
         this._addressInput = ensureElement<HTMLInputElement>('input[name="address"]', this.container);
+        this._errorsElement = ensureElement<HTMLElement>('.form__errors', this.container);
 
-        this._paymentButtons.forEach(button => {
-            button.addEventListener('click', this.handlePaymentChange.bind(this));
+        this._addressInput.addEventListener('input', () => {
+            this.events.emit('field:changed', { field: 'address', value: this._addressInput.value });
         });
 
-        this._addressInput.addEventListener('input', () => this.validate());
-        this._errorsElement = ensureElement<HTMLElement>('.form__errors', this.container);
-    }
-
-    private handlePaymentChange(event: MouseEvent): void {
-        const target = event.target as HTMLButtonElement;
-        const paymentMethod = target.name as TPayment; 
-        this.setPayment(paymentMethod);
-        this._paymentChangeHandlers.forEach(handler => handler(paymentMethod));
-        this.validate();
-    }
-
-    protected validate(): boolean {
-        const address = this._addressInput.value.trim();
-        const hasPayment = this.container.querySelector('button[name].button_active');
-
-        const isValid = !!address && !!hasPayment;
-
-        if (!address) {
-            this._errorsElement.textContent = 'Необходимо указать адрес';
-        } else {
-            this._errorsElement.textContent = '';
-        }
-
-        const submitButton = this.container.querySelector('button[type="submit"]') as HTMLButtonElement;
-        if (submitButton) {
-            submitButton.disabled = !isValid;
-        }
-
-        return isValid;
+        this._paymentButtons.forEach(button => {
+            button.classList.remove('button_alt-active');
+            button.addEventListener('click', () => {
+                const paymentMethod = button.name as TPayment;
+                this.setPayment(paymentMethod);
+                this.events.emit('payment:changed', { method: paymentMethod });
+            });
+        });
     }
 
     protected getFormData(): IOrderForm {
@@ -64,13 +45,13 @@ export class OrderForm extends Form<IOrderForm> {
 
     private setPayment(method: TPayment): void {
         this._paymentButtons.forEach(button => {
-            button.classList.toggle('button_active', button.name === method);
+            button.classList.toggle('button_alt-active', button.name === method);
         });
     }
 
     private getSelectedPayment(): TPayment {
-        const activeButton = this.container.querySelector('button[name].button_active') as HTMLButtonElement;
-        return (activeButton?.name as TPayment) || 'card'; 
+        const activeButton = this.container.querySelector('button[name].button_alt-active') as HTMLButtonElement;
+        return (activeButton?.name as TPayment) || '';
     }
 
     set payment(value: TPayment) {
@@ -79,17 +60,25 @@ export class OrderForm extends Form<IOrderForm> {
 
     set address(value: string) {
         this._addressInput.value = value;
-        this.validate();
+        this.events.emit('field:changed', { field: 'address', value });
     }
 
-    set onPaymentChange(handler: (method: TPayment) => void) {
-        this._paymentChangeHandlers.push(handler);
+    updateSubmitButtonState(isValid: boolean): void {
+        const submitButton = this.container.querySelector('button[type="submit"]') as HTMLButtonElement;
+        if (submitButton) {
+            submitButton.disabled = !isValid;
+        }
     }
 
-    clear(): void {
-        super.clear();
-        this._paymentButtons.forEach(button => {
-            button.classList.remove('button_active');
-        });
+    updateErrors(message: string): void {
+        this._errorsElement.textContent = message;
+    }
+
+    protected handleSubmit(): void {
+        this.events.emit('submit', this.getFormData());
+    }
+
+    protected validate(): boolean {
+        return true; 
     }
 }

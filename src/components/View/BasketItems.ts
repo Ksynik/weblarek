@@ -1,16 +1,17 @@
-import { Component } from '../base/Component';
+import { CardBase } from './cards/CardBase';
 import { ensureElement } from '../../utils/utils';
-import { IBasketItem } from '../../types';
+import { IEvents } from '../base/Events';
 
-export class BasketItem extends Component<IBasketItem> {
+
+export class BasketItem extends CardBase {
     protected _index: HTMLElement;
     protected _title: HTMLElement;
     protected _price: HTMLElement;
     protected _deleteButton: HTMLButtonElement;
     private _deleteHandlers: (() => void)[] = [];
 
-    constructor(container: HTMLElement) {
-        super(container);
+    constructor(events: IEvents, container: HTMLElement) {
+        super(events, container);
 
         this._index = ensureElement<HTMLElement>('.basket__item-index', this.container);
         this._title = ensureElement<HTMLElement>('.card__title', this.container);
@@ -27,15 +28,7 @@ export class BasketItem extends Component<IBasketItem> {
         this._index.textContent = value.toString();
     }
 
-    set title(value: string) {
-        this._title.textContent = value;
-    }
-
-    set price(value: number | null) {
-        this._price.textContent = value === null ? '—' : `${value} синапсов`;
-    }
-
-    set onDelete(callback: () => void) {
+    addDeleteHandler(callback: () => void) {
         this._deleteHandlers.push(callback);
     }
 }
