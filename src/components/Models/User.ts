@@ -2,11 +2,11 @@ import { IUser, TPayment } from '../../types';
 import { EventEmitter } from '../base/Events';
 
 export class User {
-    payment: TPayment = '';
+    payment: TPayment | '' = '';
     email: string = '';
     phone: string = '';
     address: string = '';
-    private events = new EventEmitter();
+    public events = new EventEmitter();
 
     setData(data: Partial<IUser>): void {
         if (data.payment !== undefined) this.payment = data.payment;
@@ -33,36 +33,17 @@ export class User {
         this.events.emit('user:changed', this.getData());
     }
 
-    getOrderErrors(): { payment?: string; address?: string } {
-        const errors: { payment?: string; address?: string } = {};
-        if (!this.payment) {
-            errors.payment = 'Не выбран способ оплаты';
-        }
-        if (!this.address) {
-            errors.address = 'Укажите адрес';
-        }
-        return errors;
-    }
-
-    getContactsErrors(): { email?: string; phone?: string } {
-        const errors: { email?: string; phone?: string } = {};
-        if (!this.email) {
-            errors.email = 'Укажите e-mail';
-        }
-        if (!this.phone) {
-            errors.phone = 'Укажите телефон';
-        }
-        return errors;
-    }
-
-    getFieldErrors(): { payment?: string; email?: string; phone?: string; address?: string } {
+    validate(): Record<string, string | null> {
         return {
-            ...this.getOrderErrors(),
-            ...this.getContactsErrors()
+            email: this.email ? null : 'Email не может быть пустым',
+            phone: this.phone ? null : 'Телефон не может быть пустым',
+            address: this.address ? null : 'Необходимо указать адрес',
+            payment: this.payment ? null : 'Не выбран способ оплаты',
         };
     }
 
-    validate(): boolean {
-        return !!(this.payment && this.email && this.phone && this.address);
+    isValid(): boolean {
+        const errors = this.validate();
+        return Object.values(errors).every(value => value === null);
     }
 }

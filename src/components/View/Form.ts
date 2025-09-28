@@ -1,40 +1,41 @@
 import { Component } from '../base/Component';
+import { ensureElement } from '../../utils/utils';
 
-
-export interface IFormState {
-    valid: boolean;
-    errors: string[];
-}
-
-export abstract class Form<T = any> extends Component<{}> {
-    protected _form: HTMLFormElement;
-    private _submitHandlers: ((data: T) => void)[] = [];
+export abstract class Form extends Component<{}> {
+    protected formElement: HTMLFormElement;
+    protected errorsElement: HTMLElement;
+    protected submitButton: HTMLButtonElement;
 
     constructor(container: HTMLFormElement) {
         super(container);
-        this._form = container;
+        this.formElement = container;
 
-        this._form.addEventListener('submit', (event: SubmitEvent) => {
+        this.errorsElement = ensureElement<HTMLElement>('.form__errors', this.formElement);
+        this.submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', this.formElement);
+
+        this.formElement.addEventListener('submit', (event: SubmitEvent) => {
             event.preventDefault();
             this.handleSubmit();
         });
     }
 
-    protected abstract validate(): boolean;
-    protected abstract getFormData(): T;
-
-    protected handleSubmit(): void {
-        if (this.validate()) {
-            const formData = this.getFormData();
-            this._submitHandlers.forEach(handler => handler(formData));
-        }
+    set errors(message: string) {
+        this.errorsElement.textContent = message;
     }
 
-    set onSubmit(handler: (data: T) => void) {
-        this._submitHandlers.push(handler);
+    set submitButtonEnabled(isEnabled: boolean) {
+        this.submitButton.disabled = !isEnabled;
+    }
+
+    protected abstract emitSubmitEvent(): void;
+
+    protected handleSubmit(): void {
+        this.emitSubmitEvent();
     }
 
     clear(): void {
-        this._form.reset();
+        this.formElement.reset();
+        this.errors = '';
+        this.submitButtonEnabled = false;
     }
 }

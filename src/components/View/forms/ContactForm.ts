@@ -1,68 +1,78 @@
 import { Form } from '../Form';
 import { ensureElement } from '../../../utils/utils';
 import { EventEmitter } from '../../base/Events';
+import { User } from '../../Models/User';
 
-interface IContactsForm {
-    email: string;
-    phone: string;
-}
+export class ContactsForm extends Form {
+    private emailInput: HTMLInputElement;
+    private phoneInput: HTMLInputElement;
+    private user: User;
 
-export class ContactsForm extends Form<IContactsForm> {
-    protected _emailInput: HTMLInputElement;
-    protected _phoneInput: HTMLInputElement;
-    private _errorsElement: HTMLElement;
-    public events: EventEmitter;
-
-    constructor(container: HTMLFormElement) {
+    constructor(container: HTMLFormElement, public events: EventEmitter, user: User) {
         super(container);
-        this.events = new EventEmitter();
+        this.user = user;
 
-        this._emailInput = ensureElement<HTMLInputElement>('input[name="email"]', this.container);
-        this._phoneInput = ensureElement<HTMLInputElement>('input[name="phone"]', this.container);
-        this._errorsElement = ensureElement<HTMLElement>('.form__errors', this.container);
+        this.emailInput = ensureElement<HTMLInputElement>('input[name="email"]', this.formElement);
+        this.phoneInput = ensureElement<HTMLInputElement>('input[name="phone"]', this.formElement);
 
-        this._emailInput.addEventListener('input', () => {
-            this.events.emit('field:changed', { field: 'email', value: this._emailInput.value });
-        });
+        [this.emailInput, this.phoneInput].forEach(input =>
+            ['input', 'change'].forEach(evt =>
+                input.addEventListener(evt, () => this.onFieldChanged())
+            )
+        );
 
-        this._phoneInput.addEventListener('input', () => {
-            this.events.emit('field:changed', { field: 'phone', value: this._phoneInput.value });
-        });
+        this.updateFormState();
     }
 
-    updateErrors(message: string): void {
-        this._errorsElement.textContent = message;
-    }
+    protected emitSubmitEvent(): void {
+        const email = this.emailInput.value.trim();
+        const phone = this.phoneInput.value.trim();
 
-    setEmail(value: string) {
-        this._emailInput.value = value;
-        this.events.emit('field:changed', { field: 'email', value });
-    }
+        this.user.setData({ email, phone });
+        const errors = this.user.validate();
+        const isValid = !errors.email && !errors.phone;
 
-    setPhone(value: string) {
-        this._phoneInput.value = value;
-        this.events.emit('field:changed', { field: 'phone', value });
-    }
-
-    updateSubmitButtonState(isValid: boolean): void {
-        const submitButton = this.container.querySelector('button[type="submit"]') as HTMLButtonElement;
-        if (submitButton) {
-            submitButton.disabled = !isValid;
+        if (!isValid) {
+            this.updateFormState();
+            return;
         }
+
+        this.events.emit('ContactsForm:submit');
     }
 
-    getFormData(): IContactsForm {
-        return {
-            email: this._emailInput.value,
-            phone: this._phoneInput.value,
-        };
+    private onFieldChanged() {
+        const email = this.emailInput.value.trim();
+        const phone = this.phoneInput.value.trim();
+
+        this.user.setData({ email, phone });
+        this.updateFormState();
+
+        this.events.emit('field:changed', { field: 'email', value: email });
+        this.events.emit('field:changed', { field: 'phone', value: phone });
     }
 
-    protected handleSubmit(): void {
-        this.events.emit('submit', this.getFormData());
+    private updateFormState() {
+        const errors = this.user.validate();
+        const isValid = !errors.email && !errors.phone;
+
+        this.submitButtonEnabled = isValid;
+        this.errors = isValid ? '' : errors.email || errors.phone || '';
     }
 
-    protected validate(): boolean {
-        return true; // бизнес-валидация уехала в модель User
+    set email(value: string) {
+        this.emailInput.value = value;
+        this.updateFormState();
+    }
+
+    set phone(value: string) {
+        this.phoneInput.value = value;
+        this.updateFormState();
+    }
+
+    clear() {
+        this.email = '';
+        this.phone = '';
+        this.user.setData({ email: '', phone: '' });
     }
 }
+

@@ -1,47 +1,44 @@
 import { CardBase } from './CardBase';
 import { IEvents } from '../../base/Events';
-import { ensureElement } from '../../../utils/utils';
 import { mapCategoryToModifier } from '../../../utils/constants';
 
-
 export class CatalogCard extends CardBase {
-    cardImageElement: HTMLImageElement;
-    categoryElement: HTMLElement;
-    priceElement: HTMLElement;
-    private _price: number | null = null;
+    public buttonElement: HTMLButtonElement;
+    protected imageElement: HTMLImageElement;
+    protected titleElement: HTMLElement;
+    protected categoryElement: HTMLElement;
 
-    constructor(protected events: IEvents, container: HTMLElement) {
+    constructor(events: IEvents, container: HTMLElement) {
         super(events, container);
 
-        this.categoryElement = ensureElement<HTMLElement>('.card__category', this.container);
-        this.cardImageElement = ensureElement<HTMLImageElement>('.card__image', this.container);
-        this.priceElement = ensureElement<HTMLElement>('.card__price', this.container);
+        this.buttonElement = this.container as HTMLButtonElement;
 
-        this.container.addEventListener('click', (event: MouseEvent) => {
-            event.preventDefault();
-            this.events.emit('card:select', { id: this.id });
+        this.imageElement = this.container.querySelector<HTMLImageElement>('.card__image')!;
+        this.titleElement = this.container.querySelector<HTMLElement>('.card__title')!;
+        this.categoryElement = this.container.querySelector<HTMLElement>('.card__category')!;
+
+        this.buttonElement.addEventListener('click', () => {
+            if (this.id) {
+                this.events.emit('card:select', { id: this.id });
+            }
         });
     }
 
+    set image(src: string) { 
+        if (this.imageElement) this.imageElement.src = src; 
+    }
+    set alt(value: string) { 
+        if (this.imageElement) this.imageElement.alt = value; 
+    }
+    set title(value: string) { 
+        if (this.titleElement) this.titleElement.textContent = value; 
+    }
     set category(value: string) {
+        if (!this.categoryElement) return;
         this.categoryElement.textContent = value;
+        this.categoryElement.className = 'card__category';
         this.categoryElement.classList.add(`card__category_${mapCategoryToModifier(value)}`);
     }
-
-    set image(value: string) {
-        this.cardImageElement.src = value;
-    }
-
-    get price(): number | null {
-        return this._price;
-    }
-
-    set price(value: number | null) {
-        this._price = value;
-        if (this.priceElement) {
-            this.priceElement.textContent =
-                value !== null ? `${value} синапсов` : 'бесценно';
-        }
-    }
-    
 }
+
+

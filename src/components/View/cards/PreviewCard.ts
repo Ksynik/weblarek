@@ -1,55 +1,49 @@
-import { Component } from '../../base/Component';
-import { ensureElement } from '../../../utils/utils';
-import { IPreviewCard } from '../../../types';
+import { CardBase } from './CardBase';
+import { IEvents } from '../../base/Events';
 
-export class PreviewCard extends Component<IPreviewCard> {
-    protected _image: HTMLImageElement;
-    protected _category: HTMLElement;
-    protected _title: HTMLElement;
-    protected _description: HTMLElement;
-    protected _price: HTMLElement;
-    protected _button: HTMLButtonElement;
-    private _buttonClickHandlers: (() => void)[] = [];
-    private _deleteHandlers: (() => void)[] = [];
+export class PreviewCard extends CardBase {
+    protected imageElement: HTMLImageElement;
+    protected categoryElement: HTMLElement;
+    protected descriptionElement: HTMLElement;
+    protected buttonElement: HTMLButtonElement;
 
-    constructor(container: HTMLElement) {
-        super(container);
+    public onClick?: () => void;
 
-        this._image = ensureElement<HTMLImageElement>('.card__image', this.container);
-        this._category = ensureElement<HTMLElement>('.card__category', this.container);
-        this._title = ensureElement<HTMLElement>('.card__title', this.container);
-        this._description = ensureElement<HTMLElement>('.card__text', this.container);
-        this._price = ensureElement<HTMLElement>('.card__price', this.container);
-        this._button = ensureElement<HTMLButtonElement>('.card__button', this.container);
+    constructor(container: HTMLElement, events: IEvents) {
+        super(events, container);
 
-        this._button.addEventListener('click', () => {
-            this._buttonClickHandlers.forEach(handler => handler());
+        this.imageElement = this.container.querySelector<HTMLImageElement>('.card__image')!;
+        this.categoryElement = this.container.querySelector<HTMLElement>('.card__category')!;
+        this.descriptionElement = this.container.querySelector<HTMLElement>('.card__text')!;
+        this.buttonElement = this.container.querySelector<HTMLButtonElement>('.card__button')!;
+
+        this.buttonElement.addEventListener('click', () => {
+            if (this.onClick) this.onClick();
         });
     }
 
-    render(data: IPreviewCard): HTMLElement {
-        this._image.src = data.image;
-        if (data.alt) this._image.alt = data.alt;
-        this._category.textContent = data.category;
-        // Удаляем старые модификаторы категории
-        const classList = this._category.classList;
-        const classesToRemove = Array.from(classList).filter(cls => cls.startsWith('card__category_'));
-        classesToRemove.forEach(cls => classList.remove(cls));
-        if (data.categoryClass) {
-            classList.add(`card__category_${data.categoryClass}`);
-        }
-        this._title.textContent = data.title;
-        this._description.textContent = data.description;
-        this._price.textContent = data.price !== null ? `${data.price} синапсов` : '';
-        this._button.textContent = data.buttonText;
-        this._button.disabled = !!data.buttonDisabled;
-        return this.container;
+    set image(src: string) { 
+        if (this.imageElement) this.imageElement.src = src; 
     }
-
-    addClickHandler(callback: () => void) {
-        this._buttonClickHandlers.push(callback);
+    set alt(value: string) { 
+        if (this.imageElement) this.imageElement.alt = value; 
     }
-    addDeleteHandler(callback: () => void) {
-        this._deleteHandlers.push(callback);
+    set category(value: string) { 
+        if (this.categoryElement) this.categoryElement.textContent = value; 
+    }
+    set categoryClass(value: string) {
+        if (!this.categoryElement) return;
+        this.categoryElement.className = 'card__category';
+        this.categoryElement.classList.add(`card__category_${value}`);
+    }
+    set description(value: string) { 
+        if (this.descriptionElement) this.descriptionElement.textContent = value; 
+    }
+    set buttonText(value: string) { 
+        if (this.buttonElement) this.buttonElement.textContent = value; 
+    }
+    set buttonDisabled(value: boolean) { 
+        if (this.buttonElement) this.buttonElement.disabled = value; 
     }
 }
+
